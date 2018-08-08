@@ -1,0 +1,9 @@
+clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_SelectControl:3:mtools");
+clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_Functions.sap:3:mtools");
+clientConfig.WFM_LAYERS = [
+    {layers:['esercizio.tratte_condotte_principali', 'esercizio.tratte_allacciamenti'], numfeats: 2, fields:['fid'], outvars:['gisid']},
+    {layers:['stradario.civici'], numfeats: 1, fields:['desc_comune','nome_via_ricerca','civico_txt'], outvars:['comune','via','civico']},
+    {layers:['btu_inquadramenti.btu_inquadramenti_a_comune'], numfeats: 1, fields:['testo'], outvars:['comune_auto'], auto:true},
+    {layers:['btu_inquadramenti.btu_inquadramenti_a_circoscrizione'], numfeats: 1, fields:['testo'], outvars:['circoscrizione'], auto:true}
+];
+clientConfig.WFM_DEFAULT_ZOOM = 1000;

@@ -1,0 +1,7 @@
+clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_SelectControl:3:mtools");
+clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_Functions.osfc:3:mtools");
+clientConfig.WFM_LAYERS = [
+    {layers:['esercizio.tratte_condotte_principali', 'esercizio.tratte_allacciamenti'], numfeats: 1, fields:['fid'], outvars:['gisid'], outitem:'osfc-pipe'},
+    {layers:['stradario.civici'], numfeats: 1, fields:['desc_comune','nome_via_ricerca','civico_txt'], outvars:['comune','via','civico'], outitem:'osfc-address'}
+];
+clientConfig.WFM_SRID = 'EPSG:4326';
