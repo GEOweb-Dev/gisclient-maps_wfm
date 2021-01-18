@@ -1,4 +1,5 @@
 clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_SelectControl:3:mtools");
+clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_Toolbar:3:mtools");
 clientConfig.CLIENT_COMPONENTS.push("gisclient-maps_wfm:WFM_Functions.osvc:3:mtools");
 clientConfig.WFM_LAYERS = [
     {layers:['stradario.civici'], numfeats: 1, fields:['desc_provincia','desc_comune','nome_via_ricerca','civico_txt','_nullvalue_','colore'], outvars:['PROVINCIA','COMUNE', 'VIA','CIVICO','LETTERA','COLORE'], outitem:'osvc-address'}

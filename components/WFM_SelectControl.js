@@ -176,6 +176,150 @@ $(function(){
             }
     );
 });
+
+window.GCComponents["Layers"].addLayer('layer-wfm-highlight-manual_select', {
+    displayInLayerSwitcher:false,
+    styleMap: new OpenLayers.StyleMap({
+        'default': {
+            fill: false,
+            fillColor: "red",
+            fillOpacity: 0.9,
+            hoverFillColor: "white",
+            hoverFillOpacity: 0.9,
+            strokeColor: "red",
+            strokeOpacity: 0.9,
+            strokeWidth: 10,
+            strokeLinecap: "round",
+            strokeDashstyle: "solid",
+            hoverStrokeColor: "red",
+            hoverStrokeOpacity: 1,
+            hoverStrokeWidth: 10,
+            pointRadius: 8,
+            hoverPointRadius: 1,
+            hoverPointUnit: "%",
+            pointerEvents: "visiblePainted",
+            cursor: "inherit"
+        },
+        'select': {
+            fill: true,
+            fillColor: "red",
+            fillOpacity: 0.9,
+            hoverFillColor: "white",
+            hoverFillOpacity: 0.9,
+            strokeColor: "red",
+            strokeOpacity: 1,
+            strokeWidth: 10,
+            strokeLinecap: "round",
+            strokeDashstyle: "solid",
+            hoverStrokeColor: "red",
+            hoverStrokeOpacity: 1,
+            hoverStrokeWidth: 10,
+            pointRadius: 8,
+            hoverPointRadius: 1,
+            hoverPointUnit: "%",
+            pointerEvents: "visiblePainted",
+            cursor: "pointer"
+        },
+        'temporary': {
+            fill: true,
+            fillColor: "EEA652",
+            fillOpacity: 0.2,
+            hoverFillColor: "white",
+            hoverFillOpacity: 0.8,
+            strokeColor: "#EEA652",
+            strokeOpacity: 1,
+            strokeLinecap: "round",
+            strokeWidth: 4,
+            strokeDashstyle: "solid",
+            hoverStrokeColor: "red",
+            hoverStrokeOpacity: 1,
+            hoverStrokeWidth: 0.2,
+            pointRadius: 6,
+            hoverPointRadius: 1,
+            hoverPointUnit: "%",
+            pointerEvents: "visiblePainted",
+            cursor: "pointer"
+        }
+    })
+}, {
+    "sketchcomplete": function(obj) {
+        // **** Get main selection control
+        var selectControls = this.map.getControlsBy('gc_id', 'control-querytoolbar');
+        if (selectControls.length != 1)
+            return;
+        if (!selectControls[0].controls)
+            return;
+        var selectControl = selectControls[0];
+
+        // **** insert configured WFS layers
+        if (typeof(clientConfig.WFM_LAYERS_MANUAL_SELECT) === 'undefined') {
+            return;
+        }
+        var featureTypes = '';
+        var selectLayers = [];
+        var selectControlAuto = this.map.getControlsBy('gc_id', 'control-wfm-autoselect')[0];
+        for (var i=0; i<clientConfig.WFM_LAYERS_MANUAL_SELECT.length; i++) {
+            var featureTypesAuto = '';
+            var selectLayersAuto = [];
+
+            for (var j=0; j<clientConfig.WFM_LAYERS_MANUAL_SELECT[i].layers.length; j++) {
+                var tmpLayer = selectControl.getLayerFromFeature(clientConfig.WFM_LAYERS_MANUAL_SELECT[i].layers[j]);
+                var idx;
+                for (idx = 0; idx < selectLayersAuto.length; idx++)  {
+                    if (selectLayersAuto[idx].id === tmpLayer.id)
+                        break;
+                }
+                if (idx === selectLayersAuto.length)
+                    selectLayersAuto.push(tmpLayer);
+                featureTypesAuto += clientConfig.WFM_LAYERS_MANUAL_SELECT[i].layers[j] + ',';
+            }
+
+            selectControlAuto.layers = selectLayersAuto;
+            selectControlAuto.queryFeatureType = featureTypesAuto.substring(0, featureTypesAuto.length -1);
+            selectControlAuto.wfsCache = selectControls[0].wfsCache;
+            selectControlAuto.resultLayer = this;
+            selectControlAuto.maxVectorFeatures = clientConfig.WFM_LAYERS_MANUAL_SELECT[i].numfeats;
+            selectControlAuto.maxFeatures = clientConfig.WFM_LAYERS_MANUAL_SELECT[i].numfeats;
+            selectControlAuto.activate();
+            selectControlAuto.select(obj.feature.geometry);
+            selectControlAuto.deactivate();
+        }
+        return false;
+    },
+    "featureadded": function(obj) {
+        var features = obj.object.features;
+        var wfmExportData = {};
+        var wfmArrayData = [];
+        for (var i = 0; i < features.length; i++) {
+            for (var j=0; j<clientConfig.WFM_LAYERS_MANUAL_SELECT.length; j++) {
+                if (clientConfig.WFM_LAYERS_MANUAL_SELECT[j].layers.indexOf(features[i].featureTypeName) > -1) {
+                    for (var k = 0; k < clientConfig.WFM_LAYERS_MANUAL_SELECT[j].fields.length; k++) {
+                        var dataField = clientConfig.WFM_LAYERS_MANUAL_SELECT[j].outvars[k];
+                        var dataValue = features[i].attributes[clientConfig.WFM_LAYERS_MANUAL_SELECT[j].fields[k]];
+                        if (clientConfig.WFM_LAYERS_MANUAL_SELECT[j].numfeats > 1) {
+                            var tmpObj = {};
+                            tmpObj[dataField] = dataValue;
+                            wfmArrayData.push(tmpObj);
+                        }
+                        else {
+                            wfmExportData[dataField] = dataValue;
+                        }
+                    }
+                    var outItemName = clientConfig.WFM_LAYERS_MANUAL_SELECT[j].outitem;
+                    if (outItemName != 'undefined') {
+                        wfmExportData['wfm_outitem'] = outItemName;
+                        if (wfmArrayData.length > 0) {
+                            wfmExportData[outItemName] = wfmArrayData;
+                        }
+                    }
+                }
+            }
+        }
+
+        window.GCComponents.Functions.sendToWFM(wfmExportData);
+    }
+});
+
 window.GCComponents["Layers"].addLayer('layer-wfm-highlight', {
     displayInLayerSwitcher:false,
     styleMap: new OpenLayers.StyleMap({
@@ -329,7 +473,6 @@ window.GCComponents["Layers"].addLayer('layer-wfm-markpoint', {
                         selectLayersAuto.push(tmpLayer);
                     featureTypesAuto += clientConfig.WFM_LAYERS[i].layers[j] + ',';
                 }
-
                 selectControlAuto.layers = selectLayersAuto;
                 selectControlAuto.queryFeatureType = featureTypesAuto.substring(0, featureTypesAuto.length -1);
                 selectControlAuto.wfsCache = selectControls[0].wfsCache;
@@ -405,70 +548,3 @@ window.GCComponents["Controls"].addControl('control-wfm-autoselect', function(ma
         }
     )
 });
-
-// **** Point marker draw control
-window.GCComponents["Controls"].addControl('control-wfm-markpoint', function(map){
-    return new OpenLayers.Control.DrawFeature(
-        map.getLayersByName('layer-wfm-markpoint')[0],
-        OpenLayers.Handler.Point,
-        {
-            gc_id: 'control-wfm-markpoint',
-            eventListeners: {
-                'activate': function(e){
-                    if (map.currentControl != this) {
-                        map.currentControl.deactivate();
-                        var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
-                        if (touchControl.length > 0) {
-                            touchControl[0].dragPan.deactivate();
-                        }
-                    }
-                    map.currentControl=this;
-                },
-                'deactivate': function(e){
-                    var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
-                    if (touchControl.length > 0) {
-                        touchControl[0].dragPan.activate();
-                    }
-                    if (!this.layer.keepFeatures) {
-                        this.layer.removeAllFeatures();
-                    }
-                    var btnControl = map.getControlsBy('id', 'button-wfm-markpoint')[0];
-                    if (btnControl.active)
-                        btnControl.deactivate();
-
-                }
-            }
-        }
-    )
-});
-
-// **** Toolbar button
-window.GCComponents["SideToolbar.Buttons"].addButton (
-    'button-wfm-markpoint',
-    'Esporta coordinate per WFM',
-    'glyphicon-white glyphicon-pushpin',
-    function() {
-        if (sidebarPanel.handleEvent || typeof(sidebarPanel.handleEvent) === 'undefined')
-        {
-            this.map.getLayersByName('layer-wfm-highlight')[0].removeAllFeatures();
-            this.map.getLayersByName('layer-wfm-markpoint')[0].removeAllFeatures();
-            window.GCComponents.Functions.resetWFMData();
-            if (this.active) {
-                this.deactivate();
-                var drawControl = this.map.getControlsBy('gc_id', 'control-wfm-markpoint');
-                if (drawControl.length == 1)
-                    drawControl[0].deactivate();
-            }
-            else
-            {
-                this.activate();
-                var drawControl = this.map.getControlsBy('gc_id', 'control-wfm-markpoint');
-                if (drawControl.length == 1)
-                    drawControl[0].activate();
-            }
-            if (typeof(sidebarPanel.handleEvent) !== 'undefined')
-                sidebarPanel.handleEvent = false;
-        }
-    },
-    {button_group: 'tools'}
-);
