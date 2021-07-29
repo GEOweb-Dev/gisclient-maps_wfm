@@ -288,7 +288,7 @@ window.GCComponents["Layers"].addLayer('layer-wfm-highlight-manual_select', {
     },
     "featureadded": function(obj) {
         var features = obj.object.features;
-        var wfmExportData = {};
+        this.wfmExportData = {};
         var wfmArrayData = [];
         for (var i = 0; i < features.length; i++) {
             for (var j=0; j<clientConfig.WFM_LAYERS_MANUAL_SELECT.length; j++) {
@@ -302,21 +302,21 @@ window.GCComponents["Layers"].addLayer('layer-wfm-highlight-manual_select', {
                             wfmArrayData.push(tmpObj);
                         }
                         else {
-                            wfmExportData[dataField] = dataValue;
+                            this.wfmExportData[dataField] = dataValue;
                         }
                     }
                     var outItemName = clientConfig.WFM_LAYERS_MANUAL_SELECT[j].outitem;
                     if (outItemName != 'undefined') {
-                        wfmExportData['wfm_outitem'] = outItemName;
+                        this.wfmExportData['wfm_outitem'] = outItemName;
                         if (wfmArrayData.length > 0) {
-                            wfmExportData[outItemName] = wfmArrayData;
+                            this.wfmExportData[outItemName] = wfmArrayData;
                         }
                     }
                 }
             }
         }
 
-        window.GCComponents.Functions.sendToWFM(wfmExportData);
+        //window.GCComponents.Functions.sendToWFM(wfmExportData);
     }
 });
 
@@ -543,6 +543,24 @@ window.GCComponents["Controls"].addControl('control-wfm-autoselect', function(ma
 
                 },
                 'endQueryMap': function(event) {
+                    if(event.layer.wfmExportData) {
+                        window.GCComponents.Functions.sendToWFM(event.layer.wfmExportData);
+                        event.layer.wfmExportData = {};
+                    }
+                },
+                'featuresLoaded': function(featureType) {
+                    for (var j=0; j<clientConfig.WFM_LAYERS_MANUAL_SELECT.length; j++) {
+                        if (clientConfig.WFM_LAYERS_MANUAL_SELECT[j].layers.indexOf(featureType.typeName) > -1) {
+                            if (clientConfig.WFM_LAYERS_MANUAL_SELECT[j].display) {
+                                if (!this.resultLayer.hasOwnProperty('renderQueue')) {
+                                    this.resultLayer.renderQueue = [featureType];
+                                }
+                                else {
+                                    this.resultLayer.renderQueue.push(featureType);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
