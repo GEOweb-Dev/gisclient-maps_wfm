@@ -39,10 +39,6 @@ window.GCComponents["Controls"].addControl('control-wfm-toolbar', function(map){
                                 if (!this.layer.keepFeatures) {
                                     this.layer.removeAllFeatures();
                                 }
-                                var btnControl = map.getControlsBy('id', 'button-wfm-markpoint')[0];
-                                if (btnControl.active)
-                                    btnControl.deactivate();
-
                             }
                         }
                     }

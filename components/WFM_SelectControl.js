@@ -257,7 +257,7 @@ window.GCComponents["Layers"].addLayer('layer-wfm-highlight-manual_select', {
         }
         var featureTypes = '';
         var selectLayers = [];
-        var selectControlAuto = this.map.getControlsBy('gc_id', 'control-wfm-autoselect')[0];
+        var selectControlAuto = this.map.getControlsBy('gc_id', 'control-wfm-manualselect')[0];
         for (var i=0; i<clientConfig.WFM_LAYERS_MANUAL_SELECT.length; i++) {
             var featureTypesAuto = '';
             var selectLayersAuto = [];
@@ -283,6 +283,15 @@ window.GCComponents["Layers"].addLayer('layer-wfm-highlight-manual_select', {
             selectControlAuto.activate();
             selectControlAuto.select(obj.feature.geometry);
             selectControlAuto.deactivate();
+
+            selectControl.controls[2].layers = selectLayersAuto;
+            selectControl.controls[2].queryFeatureType = featureTypesAuto.substring(0, featureTypesAuto.length -1);
+            selectControl.controls[2].activate();
+            selectControl.clearResults();
+            selectControl.controls[2].select(obj.feature.geometry);
+            selectControl.activateVectorControl();
+            selectControl.resultLayer.setVisibility(true);
+            selectControl.controls[2].deactivate();
         }
         return false;
     },
@@ -543,9 +552,36 @@ window.GCComponents["Controls"].addControl('control-wfm-autoselect', function(ma
 
                 },
                 'endQueryMap': function(event) {
+                }
+            }
+        }
+    )
+});
+
+window.GCComponents["Controls"].addControl('control-wfm-manualselect', function(map){
+    return new OpenLayers.Control.QueryMap(
+        OpenLayers.Handler.Polygon,
+        {
+            gc_id: 'control-wfm-manualselect',
+            baseUrl: GisClientMap.baseUrl,
+            maxFeatures:1,
+            deactivateAfterSelect: true,
+            vectorFeaturesOverLimit: new Array(),
+            eventListeners: {
+                'activate': function(){
+                    var selectControls = this.map.getControlsBy('gc_id', 'control-querytoolbar');
+                    if (selectControls.length != 1)
+                        return false;
+
+                },
+                'endQueryMap': function(event) {
                     if(event.layer.wfmExportData) {
                         window.GCComponents.Functions.sendToWFM(event.layer.wfmExportData);
                         event.layer.wfmExportData = {};
+                    }
+                    if (this.resultLayer.hasOwnProperty('renderQueue')) {
+
+                        delete this.resultLayer.renderQueue;
                     }
                 },
                 'featuresLoaded': function(featureType) {
