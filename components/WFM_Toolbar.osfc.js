@@ -49,9 +49,9 @@ window.GCComponents["Controls"].addControl('control-wfm-toolbar', function(map){
                     {
                         gc_id: 'control-wfm-selectpdr',
                         //handlerOptions: {irregular: true},
-                        iconclass:"glyphicon-white glyphicon-scale",
-                        text:"Selezione POD",
-                        title:"Selezione POD",
+                        iconclass:"glyphicon-white glyphicon-user",
+                        text:"Selezione PDF",
+                        title:"Selezione PDF",
                         eventListeners: {
                             'activate': function(){
                                 this.map.getLayersByName('layer-wfm-highlight')[0].removeAllFeatures();
