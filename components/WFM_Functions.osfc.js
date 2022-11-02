@@ -40,5 +40,15 @@ window.GCComponents.Functions.resetWFMData = function(){
     OSFCData = {
         action: 'writeOnOFSC'
     };
-
+    // **** Get main selection control
+    var selectControls = GisClientMap.map.getControlsBy('gc_id', 'control-querytoolbar');
+    if (selectControls.length != 1)
+        return;
+    if (!selectControls[0].controls)
+        return;
+    var selectControl = selectControls[0];
+    selectControl.clearResults();
+    if ($('#resultpanel').is(":visible"))
+        sidebarPanel.hide();
+    $('.panel-clearresults').css("display", "none");
 }
