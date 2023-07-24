@@ -31,6 +31,16 @@ window.GCComponents.InitFunctions.centerMapWFM = function () {
             window.GCComponents.Functions.centerMapOnFeature(queryStringItems.layer, queryString, values);
         }
     }
+    else if (queryStringItems.wkt) {
+        var wktSRID = (queryStringItems.srid != null ? queryStringItems.srid : clientConfig.WFM_SRID);
+        var wktPrj = new OpenLayers.Projection('EPSG:'+wktSRID);
+        var geomInput = OpenLayers.Geometry.fromWKT(queryStringItems.wkt);
+        if (GisClientMap.map.projection != wktPrj.projCode) {
+            geomInput.transform(wktPrj, GisClientMap.map.projection);
+        }
+        geomInput.calculateBounds();
+        GisClientMap.map.zoomToExtent(geomInput.bounds);
+    }
 }
 
 window.GCComponents.Functions.sendToWFM = function(wfmItems) {
