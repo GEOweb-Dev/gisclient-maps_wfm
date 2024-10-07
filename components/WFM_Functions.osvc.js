@@ -2,10 +2,14 @@
 //**** Functions for GEOweb - WFM integration
 //**** OSVC integration functions
 
-window.GCComponents.InitFunctions.centerMapWFM = function () {
-    var queryStringItems = window.GCComponents.Functions.parseQueryString();
-    if (queryStringItems.layer) {
-        var fType = GisClientMap.getFeatureType(queryStringItems.layer);
+var OSVCData = {
+    action: 'writeOnOSVC'
+};
+
+window.GCComponents.Functions.postMessageHandlerOSVC = function (event) {
+    var postData = event.data;
+    if (postData.layer) {
+        var fType = GisClientMap.getFeatureType(postData.layer);
         if (!fType)
             return;
 
@@ -16,25 +20,25 @@ window.GCComponents.InitFunctions.centerMapWFM = function () {
                 continue;
             var fieldName = fType.properties[i].name;
             var valPlaceholder = 'param' + i;
-            if (typeof (queryStringItems[fieldName]) != 'undefined') {
+            if (typeof (postData[fieldName]) != 'undefined') {
                 if (queryString.length == 0) {
                     queryString += fieldName + ' = :' + valPlaceholder;
                 }
                 else {
                     queryString += ' AND ' + fieldName + ' = :' + valPlaceholder;
                 }
-                values[valPlaceholder] = queryStringItems[fieldName];
+                values[valPlaceholder] = postData[fieldName];
             }
         }
         if (queryString.length > 0) {
             queryString = '(' + queryString + ')';
-            window.GCComponents.Functions.centerMapOnFeature(queryStringItems.layer, queryString, values);
+            window.GCComponents.Functions.centerMapOnFeature(postData.layer, queryString, values);
         }
     }
-    else if (queryStringItems.wkt) {
-        var wktSRID = (queryStringItems.srid != null ? queryStringItems.srid : clientConfig.WFM_SRID);
+    else if (postData.wkt) {
+        var wktSRID = (postData.srid != null ? postData.srid : clientConfig.WFM_SRID);
         var wktPrj = new OpenLayers.Projection('EPSG:'+wktSRID);
-        var geomInput = OpenLayers.Geometry.fromWKT(queryStringItems.wkt);
+        var geomInput = OpenLayers.Geometry.fromWKT(postData.wkt);
         if (GisClientMap.map.projection != wktPrj.projCode) {
             geomInput.transform(wktPrj, GisClientMap.map.projection);
         }
@@ -43,49 +47,43 @@ window.GCComponents.InitFunctions.centerMapWFM = function () {
     }
 }
 
+// **** PostMessage
+window.addEventListener('message', window.GCComponents.Functions.postMessageHandlerOSVC, false);
+
 window.GCComponents.Functions.sendToWFM = function(wfmItems) {
     if (wfmItems.x && wfmItems.y && wfmItems.srid) {
         var srid_native = GisClientMap.map.displayProjection?GisClientMap.map.displayProjection:this.map.projection;
-        var osvcCoordTag = (wfmItems.srid==srid_native?'osvc-coord':'osvc-coord-'+ wfmItems.srid.substring(wfmItems.srid.indexOf(":")+1));
-        var osvcCoord = document.getElementsByTagName(osvcCoordTag);
-        if (osvcCoord.length === 1) {
-            osvcCoord[0].innerHTML = 'X:' + wfmItems.x + '|Y:' +wfmItems.y;
-        }
+        var osvcCoordProp = (wfmItems.srid==srid_native?'osvc-coord':'osvc-coord-'+ wfmItems.srid.substring(wfmItems.srid.indexOf(":")+1));
+        OSVCData[osvcCoordProp] = 'X:' + wfmItems.x + '|Y:' +wfmItems.y;
     }
     else {
         if (!wfmItems.wfm_outitem)
             return;
-        var osvcItem = document.getElementsByTagName(wfmItems.wfm_outitem);
         var tagContent = '';
-        if (osvcItem.length === 1) {
-            for (var field in wfmItems) {
-                if (field !== 'wfm_outitem') {
-                    var fieldVal = (typeof(wfmItems[field]) === 'undefined' || wfmItems[field] === null)?'':wfmItems[field];
-                    tagContent += field + ':' + fieldVal + '|';
-                }
+        for (var field in wfmItems) {
+            if (field !== 'wfm_outitem') {
+                var fieldVal = (typeof(wfmItems[field]) === 'undefined' || wfmItems[field] === null)?'':wfmItems[field];
+                tagContent += field + ':' + fieldVal + '|';
             }
-            osvcItem[0].innerHTML = tagContent.substring(0, tagContent.length -1);
         }
+        OSVCData[wfmItems.wfm_outitem] = tagContent.substring(0, tagContent.length -1);
     }
+    parent.postMessage(OSVCData,'*');
 }
 
 window.GCComponents.Functions.resetWFMData = function(){
-    var osvcTag = document.getElementsByTagName('osvc-coord');
-    if (osvcTag.length === 1)
-        osvcTag[0].innerHTML = '';
-    if (typeof(clientConfig.WFM_SRID) !== 'undefined') {
-        var osvcSrid = clientConfig.WFM_SRID;
-        osvcSrid = 'osvc-coord-'+ osvcSrid.substring(osvcSrid.indexOf(":")+1);
-        osvcTag = document.getElementsByTagName(osvcSrid);
-        if (osvcTag.length === 1)
-            osvcTag[0].innerHTML = '';
-    }
-    for (var j=0; j<clientConfig.WFM_LAYERS.length; j++) {
-        if (typeof(clientConfig.WFM_LAYERS[j].outitem) !== 'undefined') {
-            osvcTag = document.getElementsByTagName(clientConfig.WFM_LAYERS[j].outitem);
-            if (osvcTag.length === 1)
-                osvcTag[0].innerHTML = '';
-        }
-    }
-
+    OSVCData = {
+        action: 'writeOnOSVC'
+    };
+    // **** Get main selection control
+    var selectControls = GisClientMap.map.getControlsBy('gc_id', 'control-querytoolbar');
+    if (selectControls.length != 1)
+        return;
+    if (!selectControls[0].controls)
+        return;
+    var selectControl = selectControls[0];
+    selectControl.clearResults();
+    if ($('#resultpanel').is(":visible"))
+        sidebarPanel.hide();
+    $('.panel-clearresults').css("display", "none");
 }
