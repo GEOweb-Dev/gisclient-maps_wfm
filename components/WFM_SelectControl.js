@@ -431,19 +431,13 @@ window.GCComponents["Layers"].addLayer('layer-wfm-markpoint', {
     "sketchcomplete": function(obj) {
         var tmpGeom = obj.feature.geometry.clone();
         var srid = this.map.displayProjection?this.map.displayProjection:this.map.projection;
+        if (typeof(clientConfig.WFM_SRID) !== 'undefined') {
+            srid = clientConfig.WFM_SRID;
+        }
         if (srid != this.map.projection) {
             tmpGeom.transform(this.map.projection, srid);
         }
         window.GCComponents.Functions.sendToWFM({x: tmpGeom.x, y:tmpGeom.y, srid:srid});
-
-        if (typeof(clientConfig.WFM_SRID) !== 'undefined') {
-            tmpGeom = obj.feature.geometry.clone();
-            srid = clientConfig.WFM_SRID;
-            if (srid != this.map.projection) {
-                tmpGeom.transform(this.map.projection, srid);
-            }
-            window.GCComponents.Functions.sendToWFM({x: tmpGeom.x, y:tmpGeom.y, srid:srid});
-        }
 
         this.removeAllFeatures();
     },

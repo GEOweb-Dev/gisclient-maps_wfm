@@ -17,7 +17,7 @@ window.GCComponents.Functions.postMessageHandler = function (event) {
 window.addEventListener('message', window.GCComponents.Functions.postMessageHandler, false);
 
 window.GCComponents.Functions.sendToWFM = function(wfmItems) {
-    if (wfmItems.x && wfmItems.y && wfmItems.srid) {
+    if (wfmItems.x && wfmItems.y && wfmItems.srid && !wfmItems.hasOwnProperty('wfm_outitem')) {
         if (wfmItems.srid !== clientConfig.WFM_SRID)
             return;
         OSFCData.coordx = wfmItems.x;
