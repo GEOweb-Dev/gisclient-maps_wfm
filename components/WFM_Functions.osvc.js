@@ -51,7 +51,7 @@ window.GCComponents.Functions.postMessageHandlerOSVC = function (event) {
 window.addEventListener('message', window.GCComponents.Functions.postMessageHandlerOSVC, false);
 
 window.GCComponents.Functions.sendToWFM = function(wfmItems) {
-    if (wfmItems.x && wfmItems.y && wfmItems.srid) {
+    if (wfmItems.x && wfmItems.y && wfmItems.srid && !wfmItems.hasOwnProperty('wfm_outitem')) {
         var srid_native = GisClientMap.map.displayProjection?GisClientMap.map.displayProjection:this.map.projection;
         var osvcCoordProp = (wfmItems.srid==srid_native?'osvc-coord':'osvc-coord-'+ wfmItems.srid.substring(wfmItems.srid.indexOf(":")+1));
         OSVCData[osvcCoordProp] = 'X:' + wfmItems.x + '|Y:' +wfmItems.y;
